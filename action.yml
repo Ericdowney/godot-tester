@@ -40,7 +40,7 @@ inputs:
   assert-check:
     description: "Set to true to check by assert count instead of tests"
     required: false
-    default: "false"
+    default: "true"
   max-fails:
     description: "Maximum number of failing asserts or tests, if this or pass rate fails then the action will fail. Is not checked if you do not set it"
     required: false

@@ -31,71 +31,10 @@ cap() { tee /tmp/capture.out; }
 # return the output of the most recent command that was captured by cap
 ret() { cat /tmp/capture.out; }
 
-check_by_test() {
-
-    teststring="Tests:"
-    # new solution, need to count number of tests that were run e.g.
-    # a line that starts with "* test"
-    # versus the number of tests total
-    test_flagged="- test"
-    script_error="SCRIPT ERROR"
-
-    test_set=0
-    wait_for_fail=0
-    EXTRA_TESTS=0
-
-    while read line; do
-        # credit : https://stackoverflow.com/questions/17998978/removing-colors-from-output
-        temp=$(echo $line | sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g')
-        # can see with below line all the extra characters that echo ignores
-        # echo LINE: $temp
-        if [[ $temp =~ ^$script_error ]]; then
-            echo "script error found at $temp"
-            if [ ${IGNORE_ERROR} = "false" ]; then
-                FAILED=$((FAILED + 1))
-                EXTRA_TESTS=$FAILED
-                echo failed test count increased: $FAILED
-                echo
-                echo
-            fi
-        elif [[ $temp =~ (Run)[[:space:]]+(Summary) ]]; then
-            test_set=1
-            echo reached test summary
-            echo
-            continue
-        fi
-
-        if [ "$test_set" -eq "0" ]; then
-            continue
-        elif [[ "$wait_for_fail" -eq "1" && $temp =~ ^[[:space:]]*(\[Failed\]) ]]; then
-            wait_for_fail=0
-            FAILED=$((FAILED + 1))
-            echo "test error found at $temp"
-            echo failed test count increased $FAILED
-            echo
-            echo
-        elif [[ $temp =~ ^$test_flagged ]]; then
-            wait_for_fail=1
-            echo "possible issue with test $temp ..."
-        fi
-
-        if [[ $temp =~ ^$teststring ]]; then
-            TESTS=${temp//[!0-9]/}
-            TESTS=$((TESTS + EXTRA_TESTS)) # adding script error fails that were found as additional failed tests
-            echo test count, including additional script error failures: $TESTS
-            echo
-            echo
-            break
-        fi
-
-    done \
-        <<<$(ret)
-}
-
 check_by_assert() {
     script_error_fns=()
 
-    teststring="Tests:"
+    teststring="Totals"
     script_error="SCRIPT ERROR"
 
     test_set=0
@@ -126,8 +65,8 @@ check_by_assert() {
             fails=$(echo $temp | awk '{print $3}')
             FAILED=$((FAILED + fails))
             TESTS=$((TESTS + FAILED + passes))
-            echo "total failed asserts $FAILED"
-            echo "total asserts $TESTS"
+            echo "total failed tests $FAILED"
+            echo "total tests $TESTS"
             echo
             echo
             break
@@ -155,7 +94,7 @@ else
     FULL_GODOT_NAME=Godot_v${GODOT_VERSION}-${GODOT_RELEASE_TYPE}_linux_${GODOT_SERVER_TYPE}
 fi
 
-# these are mutually exclusive - direct scenes cannot take a config file but they can 
+# these are mutually exclusive - direct scenes cannot take a config file but they can
 # have all those options set on the scene itself anyways
 if [ "$DIRECT_SCENE" != "false" ]; then
     RUN_OPTIONS="${DIRECT_SCENE}"
@@ -199,19 +138,14 @@ else
 fi
 
 # removing scene used to rebuild import files
-rm -rf ./addons/gut/.cli_add/__rebuilder.gd 
+rm -rf ./addons/gut/.cli_add/__rebuilder.gd
 rm -rf ./addons/gut/.cli_add/__rebuilder_scene.tscn
 
 rm -rf ${CUSTOM_DL_PATH}/${FULL_GODOT_NAME}${GODOT_EXTENSION}
 rm -f ${CUSTOM_DL_PATH}/${FULL_GODOT_NAME}${GODOT_EXTENSION}.zip
 
 # parsing test output to fill test count and pass count variables
-
-if [ "$ASSERT_CHECK" != "false" ]; then
-    check_by_assert
-else
-    check_by_test
-fi
+check_by_assert
 
 passrate=".0"
 endmsg=""
