@@ -25,24 +25,8 @@ inputs:
     description: "How long the test should be run before it's timed out and fails"
     required: false
     default: "300"
-  minimum-pass:
-    description: "Decimal value for minimum passing score e.g. if 88% of tests pass and minimum-pass is 0.8, then action passes."
-    required: false
-    default: "0.99"
-  test-dir:
-    description: "Directory containing Gut tests"
-    required: false
-    default: "res://test"
   direct-scene:
     description: "If instead of running the GUT command line you'd like to run a GUT scene instead: recommended to extend gut's plugin script and exit godot when all tests complete"
-    required: false
-    default: "false"
-  assert-check:
-    description: "Set to true to check by assert count instead of tests"
-    required: false
-    default: "true"
-  max-fails:
-    description: "Maximum number of failing asserts or tests, if this or pass rate fails then the action will fail. Is not checked if you do not set it"
     required: false
     default: "false"
   ignore-errors:
@@ -64,11 +48,7 @@ runs:
   - ${{ inputs.is-mono }}
   - ${{ inputs.import-time }}
   - ${{ inputs.test-timeout }}
-  - ${{ inputs.minimum-pass }}
-  - ${{ inputs.test-dir }}
   - ${{ inputs.direct-scene }}
-  - ${{ inputs.assert-check }}
-  - ${{ inputs.max-fails }}
   - ${{ inputs.ignore-errors }}
   - ${{ inputs.config-file }}
 
